@@ -1,0 +1,61 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Text IDs preserve existing MongoDB links; new records use UUIDs.
+model User {
+  id       String @id @default(uuid())
+  email    String @unique
+  name     String
+  password String
+}
+
+model Game {
+  id                 String         @id @default(uuid())
+  name               String
+  title              String         @default("")
+  description        String
+  destaque           Boolean        @default(false)
+  highlightsTitle    String         @default("")
+  closingDescription String         @default("")
+  finalNote          String         @default("")
+  genre              String[]       @default([])
+  plataforma         String[]       @default([])
+  lancamento         DateTime
+  empresa            String
+  size               Float?
+  rawgImageUrl        String?
+  giantbombImageUrl   String?
+  highlights         Highlight[]
+  requirements       Requirements[]
+  @@index([lancamento])
+  @@index([destaque])
+}
+
+model Highlight {
+  id          String @id @default(uuid())
+  title       String
+  description String
+  gameId      String
+  game        Game   @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  @@index([gameId])
+}
+
+model Requirements {
+  id        String @id @default(uuid())
+  system    String
+  processor String
+  memory    String
+  graphics  String
+  directX   String @default("")
+  storage   String
+  other     String @default("")
+  gameId    String
+  game      Game   @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  @@index([gameId])
+}

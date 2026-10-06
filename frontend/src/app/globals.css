@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply scroll-pt-[30px] scroll-smooth motion-reduce:scroll-auto;
+  }
+  body {
+    @apply m-0 bg-background font-sans text-foreground selection:bg-accent selection:text-background;
+  }
+  a,
+  button,
+  input,
+  select {
+    @apply outline-offset-[5px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent;
+  }
+  a,
+  button,
+  select {
+    @apply [-webkit-tap-highlight-color:transparent];
+  }
+  *,
+  ::before,
+  ::after {
+    @apply motion-reduce:transition-none motion-reduce:animate-none;
+  }
+}

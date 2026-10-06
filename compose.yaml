@@ -1,0 +1,64 @@
+name: masterkey-catalog
+services:
+  database:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: masterkey
+      POSTGRES_USER: masterkey
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-masterkey_local}
+    ports:
+      - "127.0.0.1:${DATABASE_PORT:-5434}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U masterkey -d masterkey"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+  backend:
+    build: ./backend
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DATABASE_URL: postgresql://masterkey:${POSTGRES_PASSWORD:-masterkey_local}@database:5432/masterkey?schema=public
+      CORS_ORIGIN: http://localhost:${FRONTEND_PORT:-3002}
+    ports:
+      - "127.0.0.1:${BACKEND_PORT:-3001}:3001"
+    depends_on:
+      database:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3001/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+  frontend:
+    build: ./frontend
+    environment:
+      API_URL: http://backend:3001
+      HOSTNAME: 0.0.0.0
+      PORT: 3000
+    ports:
+      - "127.0.0.1:${FRONTEND_PORT:-3002}:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+volumes:
+  postgres_data:
